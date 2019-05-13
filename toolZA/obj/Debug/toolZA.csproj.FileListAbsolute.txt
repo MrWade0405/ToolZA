@@ -1,0 +1,13 @@
+D:\Projects\toolZA\toolZA\bin\Debug\toolZA.exe.config
+D:\Projects\toolZA\toolZA\bin\Debug\toolZA.exe
+D:\Projects\toolZA\toolZA\bin\Debug\toolZA.pdb
+D:\Projects\toolZA\toolZA\bin\Debug\LinqToExcel.dll
+D:\Projects\toolZA\toolZA\bin\Debug\Remotion.Data.Linq.dll
+D:\Projects\toolZA\toolZA\bin\Debug\Remotion.dll
+D:\Projects\toolZA\toolZA\bin\Debug\Remotion.Interfaces.dll
+D:\Projects\toolZA\toolZA\bin\Debug\LinqToExcel.xml
+D:\Projects\toolZA\toolZA\obj\Debug\toolZA.csprojAssemblyReference.cache
+D:\Projects\toolZA\toolZA\obj\Debug\toolZA.csproj.CoreCompileInputs.cache
+D:\Projects\toolZA\toolZA\obj\Debug\toolZA.csproj.CopyComplete
+D:\Projects\toolZA\toolZA\obj\Debug\toolZA.exe
+D:\Projects\toolZA\toolZA\obj\Debug\toolZA.pdb
