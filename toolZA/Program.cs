@@ -1,5 +1,7 @@
 ﻿using LinqToExcel;
 using System;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,6 +14,8 @@ namespace toolZA
         {
             Console.OutputEncoding = Encoding.UTF8;
             const string rootDirName = @"D:\DictionaryForFullStack\DictionaryForFullStack";
+            //string connectionString = ConfigurationManager.ConnectionStrings["LearningLanguages"].ConnectionString;
+            
 
             if (Directory.Exists(rootDirName))
             {
@@ -43,10 +47,46 @@ namespace toolZA
                 Console.WriteLine();
                 Console.WriteLine("RootExcel:");
                 string[] files = Directory.GetFiles(rootDirName);
+
+
+
+
+
+                //////
+                //string file = Directory.GetFiles(rootDirName)[0];
+                //FileInfo fileInf = new FileInfo(file);
+                //var excel = new ExcelQueryFactory(fileInf.FullName);
+                //var worksheetList = excel.GetWorksheetNames().ToList();
+                //var categoriesRoot = from c in excel.Worksheet<CategoriesRoot>(worksheetList[0])
+                //                     select c;
+                //using (SqlConnection connection = new SqlConnection(connectionString))
+                //{
+                //    connection.Open();
+                //    SqlCommand command = new SqlCommand();
+                //    command.Connection = connection;
+                //    foreach (var i in categoriesRoot)
+                //    {
+                //        if (!String.IsNullOrEmpty(i.Name))
+                //        {
+                //            //command.CommandText = $"INSERT INTO CategoriesRoot (Name, UA, RU, ENU, GER, CHI, POR, SPA, POL) VALUES ('{i.Name}',N'{i.UA}',N'{i.RU}','{i.ENU}','{i.GER}',N'{i.CHI}','{i.POR}','{i.SPA}','{i.POL}')";
+                //            command.CommandText = $"DELETE FROM CategoriesRoot WHERE Name='{i.Name}'";
+
+                //            command.ExecuteNonQuery();
+                //        }
+                //    }
+                //}
+                ////////
+
+
+
+
+
+
+
+
                 foreach (string s in files)
                 {
                     ExcelSelect(s);
-
                 }
             }
             else
