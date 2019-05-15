@@ -12,62 +12,64 @@ namespace toolZA
     {
         static void Main(string[] args)
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            //Console.OutputEncoding = Encoding.UTF8;
             const string rootDirName = @"D:\DictionaryForFullStack\DictionaryForFullStack";
             string connectionString = ConfigurationManager.ConnectionStrings["LearningLanguages"].ConnectionString;
             
-
             if (Directory.Exists(rootDirName))
             {
-                Console.WriteLine("Categories:");
-                string[] RootDirs = Directory.GetDirectories(rootDirName);
+                //Console.WriteLine("Categories:");
+                string[] rootDirDirs = Directory.GetDirectories(rootDirName);
 
-                foreach (string s in RootDirs)
+                foreach (string categoryDir in rootDirDirs)
                 {
-                    ConsoleWriteExcel(s);
+                    ConsoleWriteExcel(categoryDir);
 
-                    DirectoryInfo rootDirInfo = new DirectoryInfo(s);
-                    if (rootDirInfo.Name == "Test_Icons") continue;
+                    DirectoryInfo catDirInfo = new DirectoryInfo(categoryDir);
+                    if (catDirInfo.Name == "Test_Icons") continue;
 
-                    string[] dirs = Directory.GetDirectories(s);
-                    Console.WriteLine("SubCategories:");
+                    string[] subCategoriesDirs = Directory.GetDirectories(categoryDir);
+                    //Console.WriteLine("SubCategories:");
 
-                    foreach (string d in dirs)
+                    foreach (string subCategoryDir in subCategoriesDirs)
                     {
-                        DirectoryInfo dirInfo = new DirectoryInfo(d);
-                        ConsoleWriteExcel(dirInfo.FullName);
+                        DirectoryInfo subCategoryDirInfo = new DirectoryInfo(subCategoryDir);
 
-                        if (dirInfo.Name != "pictures")
+                        ConsoleWriteExcel(subCategoryDirInfo.FullName);
+
+                        if (subCategoryDirInfo.Name != "pictures")
                         {
-                            string[] subDirs = Directory.GetDirectories(dirInfo.FullName);
-                            string picturesWordsDir = new DirectoryInfo(subDirs[0]).FullName;
-                            ConsoleWriteExcel(picturesWordsDir);
+                            string[] subCategoryDirDirs = Directory.GetDirectories(subCategoryDirInfo.FullName);
+                            string picturesDir = new DirectoryInfo(subCategoryDirDirs[0]).FullName;
 
-                            Console.WriteLine("Pronounce: ");
-                            string pronounceWordsDir = new DirectoryInfo(subDirs[1]).FullName;
-                            string[] pronounceWordsSubDirs = Directory.GetDirectories(pronounceWordsDir);
-                            foreach (string p in pronounceWordsSubDirs)
+                            ConsoleWriteExcel(picturesDir);
+
+                            //Console.WriteLine("Pronounce: ");
+                            string pronounceDir = new DirectoryInfo(subCategoryDirDirs[1]).FullName;
+                            string[] pronounceSubDirs = Directory.GetDirectories(pronounceDir);
+
+                            foreach (string pronounceSubDir in pronounceSubDirs)
                             {
-                                DirectoryInfo subDirsPronounceInfo = new DirectoryInfo(p);
-                                Console.WriteLine(subDirsPronounceInfo.Name);
-                                string[] filesSubDirsPronounce = Directory.GetFiles(subDirsPronounceInfo.FullName);
+                                DirectoryInfo pronounceSubDirInfo = new DirectoryInfo(pronounceSubDir);
+                                //Console.WriteLine(pronounceSubDirInfo.Name);
+                                string[] pronounceSubDirFiles = Directory.GetFiles(pronounceSubDirInfo.FullName);
 
-                                foreach (string k in filesSubDirsPronounce)
+                                foreach (string pronounceSubDirFile in pronounceSubDirFiles)
                                 {
-                                    FileInfo fileInf = new FileInfo(k);
-                                    Console.WriteLine(fileInf.Name);
+                                    FileInfo pronounceSubDirFileInfo = new FileInfo(pronounceSubDirFile);
+                                    //Console.WriteLine(pronounceSubDirFile.Name);
                                 }
                             }
                         }
                     }
 
-                    Console.WriteLine();
+                    //Console.WriteLine();
 
                 }
                 
-                Console.WriteLine();
-                Console.WriteLine("RootExcel:");
-                string[] files = Directory.GetFiles(rootDirName);
+                //Console.WriteLine();
+                //Console.WriteLine("RootExcel:");
+                string[] rootDirFiles = Directory.GetFiles(rootDirName);
 
 
 
@@ -105,62 +107,67 @@ namespace toolZA
 
 
 
-                foreach (string s in files)
+                foreach (string rootDirFile in rootDirFiles)
                 {
-                    ExcelSelect(s);
+                    ExcelSelect(rootDirFile);
                 }
             }
             else
             {
                 Console.WriteLine("Not Found Folder");
             }
+            Console.WriteLine("Finished!!!");
             Console.ReadKey();
         }
         public static void ConsoleWriteExcel(string nameDir)
         {
-            DirectoryInfo RootDirInfo = new DirectoryInfo(nameDir);
-            if (RootDirInfo.Name == "pictures")
+            DirectoryInfo dirInfo = new DirectoryInfo(nameDir);
+            if (dirInfo.Name == "pictures")
             {
-                Console.WriteLine("Pictures: ");
-                string[] filesPictures = Directory.GetFiles(RootDirInfo.FullName);
-                foreach (string s in filesPictures)
+                //Console.WriteLine("Pictures: ");
+                string[] filesPictures = Directory.GetFiles(dirInfo.FullName);
+                foreach (string filePicture in filesPictures)
                 {
-                    FileInfo fileInf = new FileInfo(s);
-                    Console.WriteLine(fileInf.Name);
+                    FileInfo filePictureInfo = new FileInfo(filePicture);
+                    //Console.WriteLine(filePictureInfo.Name);
                 }
                 return;
             }
-            if (RootDirInfo.Name == "Test_Icons")
+            if (dirInfo.Name == "Test_Icons")
             {
-                string dirTestIcons = Directory.GetDirectories(RootDirInfo.FullName)[0];
+                string dirTestIcons = Directory.GetDirectories(dirInfo.FullName)[0];
                 string dirWhiteIcons = Directory.GetDirectories(dirTestIcons)[1];
                 string[] filesWhiteIcons = Directory.GetFiles(dirWhiteIcons);
-                foreach (string s in filesWhiteIcons)
+                foreach (string fileWhiteIcon in filesWhiteIcons)
                 {
-                    FileInfo fileInf = new FileInfo(s);
-                    if (fileInf.Name.StartsWith("Test"))
-                        Console.WriteLine(fileInf.Name);
+                    FileInfo fileWhiteIconInfo = new FileInfo(fileWhiteIcon);
+                    if (fileWhiteIconInfo.Name.StartsWith("Test"))
+                    {
+                        //Console.WriteLine(fileWhiteIconInfo.Name);
+                    }
                 }
                 return;
             }
-            Console.WriteLine(RootDirInfo.Name);
-            string fileCategories = Directory.GetFiles(nameDir)[0];
-            ExcelSelect(fileCategories);
+            //Console.WriteLine(dirInfo.Name);
+            string exсelTableFile = Directory.GetFiles(nameDir)[0];
 
+            ExcelSelect(exсelTableFile);
         }
         public static void ExcelSelect(string nameFile)
         {
-            FileInfo fileInf = new FileInfo(nameFile);
-            Console.WriteLine(fileInf.Name);
-            var excel = new ExcelQueryFactory(fileInf.FullName);
+            FileInfo fileInfO = new FileInfo(nameFile);
+            //Console.WriteLine(fileInfO.Name);
+            var excel = new ExcelQueryFactory(fileInfO.FullName);
             var worksheetList = excel.GetWorksheetNames().ToList();
-            var categoriesRoot = from c in excel.Worksheet<CategoriesRoot>(worksheetList[0])
+            var excelTable = from c in excel.Worksheet<ExcelTable>(worksheetList[0])
                                  select c;
-            foreach (var i in categoriesRoot)
+            foreach (var row in excelTable)
             {
-                if (!String.IsNullOrEmpty(i.Name))
-                    Console.WriteLine($"{i.Name}    {i.UA}    {i.RU}    " +
-                        $"{i.ENU}    {i.GER}    {i.CHI}    {i.POR}    {i.SPA}    {i.POL}");
+                if (!String.IsNullOrEmpty(row.Name))
+                {
+                    //Console.WriteLine($"{i.Name}    {i.UA}    {i.RU}    " +
+                    //    $"{i.ENU}    {i.GER}    {i.CHI}    {i.POR}    {i.SPA}    {i.POL}");
+                }
             }
         }
 

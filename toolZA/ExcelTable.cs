@@ -2,7 +2,7 @@
 
 namespace toolZA
 {
-    class CategoriesRoot
+    class ExcelTable
     {
         public string Name { get; set; }
         public string UA { get; set; }
