@@ -39,6 +39,10 @@ namespace toolZA
 
                     FillLanguageTable(languagesTable, connection, columnNames);
 
+                    FillTranslationLanguagesTable(languagesTable, connection, columnNames);
+
+                    FillTestTable(testNamesTable, connection, columnNames, languagesTable, rootDirName);
+
                     foreach (string categoryDir in rootDirDirs)
                     {
                         DirectoryInfo catDirInfo = new DirectoryInfo(categoryDir);
@@ -52,13 +56,11 @@ namespace toolZA
                         commandCat.CommandText = "INSERT INTO Categories (name, picture) VALUES (@name, @picture); SELECT SCOPE_IDENTITY()";
                         var idCategory = commandCat.ExecuteScalar();
 
-                        FillTranslationTable(languagesTable, connection, columnNames, idCategory, categoriesRootTable, iteratorCatRows);
+                        FillTranslationTable(languagesTable, connection, columnNames, idCategory, categoriesRootTable, iteratorCatRows, "CategoriesTranslations", "category_id", null);
 
                         iteratorCatRows++;
 
                         string[] picturesSubCategories = Directory.GetFiles(categoryDir + "\\pictures");
-
-                        //ConsoleWriteExcel(categoryDir);
 
                         string[] subCategoriesDirs = Directory.GetDirectories(categoryDir);
 
@@ -70,7 +72,6 @@ namespace toolZA
 
                             var categoryTable = ExcelSelect(Directory.GetFiles(categoryDir)[0]).ToList();
 
-                            //ConsoleWriteExcel(subCategoryDirInfo.FullName);
                             var pictureSubCategory = Array.Find(picturesSubCategories, s => s.ToLower().Contains(subCategoryDirInfo.Name.ToLower()));
                             SqlCommand commandSubCat = new SqlCommand();
                             commandSubCat.Connection = connection;
@@ -81,33 +82,17 @@ namespace toolZA
 
                             var idSubCategory = commandSubCat.ExecuteScalar();
 
-                            FillTranslationTable(languagesTable, connection, columnNames, idSubCategory, categoryTable, iteratorSubCatRows);
+                            FillTranslationTable(languagesTable, connection, columnNames, idSubCategory, categoryTable, iteratorSubCatRows, "CategoriesTranslations", "category_id", null);
 
                             iteratorSubCatRows++;
-                            //string[] subCategoryDirDirs = Directory.GetDirectories(subCategoryDirInfo.FullName);
-                            //string picturesDir = new DirectoryInfo(subCategoryDirDirs[0]).FullName;
 
-                            ////ConsoleWriteExcel(picturesDir);
+                            var subCategoryTable = ExcelSelect(Directory.GetFiles(subCategoryDir)[0]).ToList();
 
-                            //string pronounceDir = new DirectoryInfo(subCategoryDirDirs[1]).FullName;
-                            //string[] pronounceSubDirs = Directory.GetDirectories(pronounceDir);
+                            string[] subCategoryDirDirs = Directory.GetDirectories(subCategoryDirInfo.FullName);
 
-                            //foreach (string pronounceSubDir in pronounceSubDirs)
-                            //{
-                            //    DirectoryInfo pronounceSubDirInfo = new DirectoryInfo(pronounceSubDir);
-                            //    string[] pronounceSubDirFiles = Directory.GetFiles(pronounceSubDirInfo.FullName);
-
-                            //    foreach (string pronounceSubDirFile in pronounceSubDirFiles)
-                            //    {
-                            //        FileInfo pronounceSubDirFileInfo = new FileInfo(pronounceSubDirFile);
-                            //    }
-                            //}
+                            FillWordsTable(subCategoryTable, connection, columnNames, languagesTable, subCategoryDirDirs, idSubCategory);
                         }
                     }
-
-
-
-
 
                 }
             }
@@ -152,37 +137,6 @@ namespace toolZA
             }
             
         }
-        /*public static void ConsoleWriteExcel(string nameDir)
-        {
-            DirectoryInfo dirInfo = new DirectoryInfo(nameDir);
-            if (dirInfo.Name == "pictures")
-            {
-                string[] filesPictures = Directory.GetFiles(dirInfo.FullName);
-                foreach (string filePicture in filesPictures)
-                {
-                    FileInfo filePictureInfo = new FileInfo(filePicture);
-                }
-                return;
-            }
-            if (dirInfo.Name == "Test_Icons")
-            {
-                string dirTestIcons = Directory.GetDirectories(dirInfo.FullName)[0];
-                string dirWhiteIcons = Directory.GetDirectories(dirTestIcons)[1];
-                string[] filesWhiteIcons = Directory.GetFiles(dirWhiteIcons);
-                foreach (string fileWhiteIcon in filesWhiteIcons)
-                {
-                    FileInfo fileWhiteIconInfo = new FileInfo(fileWhiteIcon);
-                    if (fileWhiteIconInfo.Name.StartsWith("Test"))
-                    {
-
-                    }
-                }
-                return;
-            }
-            string exсelTableFile = Directory.GetFiles(nameDir)[0];
-
-            //ExcelSelect(exсelTableFile);
-        }*/
         public static IQueryable<ExcelTable> ExcelSelect(string nameFile)
         {
             FileInfo fileInfO = new FileInfo(nameFile);
@@ -191,6 +145,7 @@ namespace toolZA
             var worksheetList = excel.GetWorksheetNames().ToList();
             var excelTable = from c in excel.Worksheet<ExcelTable>(worksheetList[0])
                                  where c.Name != ""
+                                 orderby c.Name
                                  select c;
             return excelTable;
         }
@@ -200,6 +155,49 @@ namespace toolZA
             var excel = new ExcelQueryFactory(fileInfO.FullName);
             var worksheetList = excel.GetWorksheetNames().ToList();
             return excel.GetColumnNames(worksheetList[0]).ToList();
+        }
+        public static void FillWordsTable(List<ExcelTable> subCategoryTable, SqlConnection connection, List<string> columnNames, List<ExcelTable> languagesTable, string[] subCategoryDirDirs, object idSubCategory)
+        {
+            string picturesDir = new DirectoryInfo(subCategoryDirDirs[0]).FullName;
+            string[] picturesFiles = Directory.GetFiles(picturesDir);
+
+            string pronounceDir = new DirectoryInfo(subCategoryDirDirs[1]).FullName;
+            string[] pronounceSubDirs = Directory.GetDirectories(pronounceDir);
+
+            DirectoryInfo soundsDir = null;
+            string[] soundsFiles = null;
+            if (subCategoryDirDirs.Length == 3)
+            {
+                soundsDir = new DirectoryInfo(subCategoryDirDirs[2]);
+                soundsFiles = Directory.GetFiles(soundsDir.FullName);
+            }
+            int iteratorWords = 0;
+            foreach (var row in subCategoryTable)
+            {
+                SqlCommand commandWord = new SqlCommand();
+                commandWord.Connection = connection;
+                commandWord.Parameters.Add(new SqlParameter("@name", row.Name));
+                commandWord.Parameters.Add(new SqlParameter("@category_id", idSubCategory));
+                commandWord.Parameters.Add(new SqlParameter("@picture", picturesFiles[iteratorWords]));
+
+                string soundFile = soundsDir is null ? null : Array.Find(soundsFiles, s => s.ToLower().Contains(row.Name.ToLower()));
+
+
+                if (soundFile is null)
+                {
+                    commandWord.CommandText = $"INSERT INTO Words (name, category_id, picture) VALUES (@name, @category_id, @picture); SELECT SCOPE_IDENTITY()";
+                }
+                else
+                {
+                    commandWord.Parameters.Add(new SqlParameter("@sound", soundFile));
+                    commandWord.CommandText = $"INSERT INTO Words (name, category_id, picture, sound) VALUES (@name, @category_id, @picture, @sound); SELECT SCOPE_IDENTITY()";
+                }
+                var idWord = commandWord.ExecuteScalar();
+
+                FillTranslationTable(languagesTable, connection, columnNames, idWord, subCategoryTable, iteratorWords, "WordTranslations", "word_id", pronounceSubDirs);
+
+                iteratorWords++;
+            }
         }
         public static void FillLanguageTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames)
         {
@@ -211,13 +209,30 @@ namespace toolZA
                     SqlCommand commandLang = new SqlCommand();
                     commandLang.Connection = connection;
                     commandLang.Parameters.Add(new SqlParameter("@name", columnNames[iteratorLangTableColumns]));
-                    commandLang.CommandText = "INSERT INTO Languages (name) VALUES (@name)";
-                    commandLang.ExecuteNonQuery();
+                    commandLang.CommandText = "INSERT INTO Languages (name) VALUES (@name); SELECT SCOPE_IDENTITY()";
+                    var idLang = commandLang.ExecuteScalar();
                     iteratorLangTableColumns++;
                 }
             }
         }
-        public static void FillTranslationTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames, object id, List<ExcelTable> transTable, int iteratorTransTable)
+        public static void FillTestTable(List<ExcelTable> testNamesTable, SqlConnection connection, List<string> columnNames, List<ExcelTable> languagesTable, string rootDirName)
+        {
+            string dirTestIcons = Directory.GetDirectories(rootDirName + "\\Test_Icons")[0];
+            string dirWhiteIcons = Directory.GetDirectories(dirTestIcons)[1];
+            string[] filesWhiteIcons = Directory.GetFiles(dirWhiteIcons);
+            int iteratorTestIcons = 2;
+            foreach (var row in testNamesTable) {
+                SqlCommand commandTest = new SqlCommand();
+                commandTest.Connection = connection;
+                commandTest.Parameters.Add(new SqlParameter("@name", row.Name));
+                commandTest.Parameters.Add(new SqlParameter("@icon", filesWhiteIcons[iteratorTestIcons]));
+                commandTest.CommandText = "INSERT INTO Tests (name, icon) VALUES (@name, @icon); SELECT SCOPE_IDENTITY()";
+                var idTest = commandTest.ExecuteScalar();
+                FillTranslationTable(languagesTable, connection, columnNames, idTest, testNamesTable, iteratorTestIcons - 2, "TestTranslations", "test_id", null);
+                iteratorTestIcons++;
+            }
+        }
+        public static void FillTranslationTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames, object id, List<ExcelTable> transTable, int iteratorTransTable, string table, string column, string[] pronounceSubDirs)
         {
             int iteratorLangTableColumns = 1;
             foreach (var lang in languagesTable)
@@ -232,13 +247,50 @@ namespace toolZA
                     var idLanguage = idLanguageQuery.GetValue(0);
                     idLanguageQuery.Close();
 
-                    SqlCommand commandCatTrans = new SqlCommand();
-                    commandCatTrans.Connection = connection;
-                    commandCatTrans.Parameters.Add(new SqlParameter("@category_id", id));
-                    commandCatTrans.Parameters.Add(new SqlParameter("@lang_id", idLanguage));
-                    commandCatTrans.Parameters.Add(new SqlParameter("@translation", GetTranslation(transTable[iteratorTransTable], columnNames[iteratorLangTableColumns])));
-                    commandCatTrans.CommandText = "INSERT INTO CategoriesTranslations (category_id, lang_id, translation) VALUES (@category_id, @lang_id, @translation); SELECT SCOPE_IDENTITY()";
-                    var idCategoryTranslation = commandCatTrans.ExecuteScalar();
+                    SqlCommand commandTrans = new SqlCommand();
+                    commandTrans.Connection = connection;
+                    commandTrans.Parameters.Add(new SqlParameter("@id", id));
+                    commandTrans.Parameters.Add(new SqlParameter("@lang_id", idLanguage));
+                    commandTrans.Parameters.Add(new SqlParameter("@translation", GetTranslation(transTable[iteratorTransTable], columnNames[iteratorLangTableColumns])));
+
+
+                    DirectoryInfo pronounceSubDirInfo;
+                    string[] pronounceSubDirFiles;
+                    string pronounceFile;
+
+                    if (table == "WordTranslations")
+                    {
+                        pronounceSubDirInfo = new DirectoryInfo(Array.Find(pronounceSubDirs, s => s.ToLower().Contains(columnNames[iteratorLangTableColumns].ToLower())));
+                        pronounceSubDirFiles = Directory.GetFiles(pronounceSubDirInfo.FullName);
+                        pronounceFile = Array.Find(pronounceSubDirFiles, s => s.ToLower().Trim().Contains(transTable[iteratorTransTable].Name.ToLower().Trim()));
+                        commandTrans.Parameters.Add(new SqlParameter("@pronounce", pronounceFile));
+                        commandTrans.CommandText = $"INSERT INTO {table} ({column}, lang_id, translation, pronounce) VALUES (@id, @lang_id, @translation, @pronounce); SELECT SCOPE_IDENTITY()";
+                    }
+                    else
+                    {
+                        commandTrans.CommandText = $"INSERT INTO {table} ({column}, lang_id, translation) VALUES (@id, @lang_id, @translation); SELECT SCOPE_IDENTITY()";
+                    }
+                    var idTranslation = commandTrans.ExecuteScalar();
+                    iteratorLangTableColumns++;
+                }
+            }
+        }
+        public static void FillTranslationLanguagesTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames)
+        {
+            int iteratorLangTableColumns = 1;
+            foreach (var lang in languagesTable)
+            {
+                if (!String.IsNullOrEmpty(lang.Name))
+                {
+                    SqlCommand commandLang = new SqlCommand();
+                    commandLang.Connection = connection;
+                    commandLang.CommandText = $"SELECT Id FROM Languages WHERE name='{columnNames[iteratorLangTableColumns]}'";
+                    SqlDataReader idLanguageQuery = commandLang.ExecuteReader();
+                    idLanguageQuery.Read();
+                    var idLanguage = idLanguageQuery.GetValue(0);
+                    idLanguageQuery.Close();
+
+                    FillTranslationTable(languagesTable, connection, columnNames, idLanguage, languagesTable, iteratorLangTableColumns - 1, "LanguageTranslations", "native_lang_id", null);
                     iteratorLangTableColumns++;
                 }
             }
