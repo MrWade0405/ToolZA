@@ -16,7 +16,7 @@ namespace toolZA
         {
             const string rootDirName = @"D:\DictionaryForFullStack\DictionaryForFullStack";
             string connectionString = ConfigurationManager.ConnectionStrings["LearningLanguages"].ConnectionString;
-            
+
             if (Directory.Exists(rootDirName))
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
@@ -89,7 +89,7 @@ namespace toolZA
                                                         "VALUES (@name, @parent_id, @picture); SELECT SCOPE_IDENTITY()";
                             var idSubCategory = commandSubCat.ExecuteScalar();
 
-                            FillTranslationTable(languagesTable, connection, columnNames, idSubCategory, categoryTable, 
+                            FillTranslationTable(languagesTable, connection, columnNames, idSubCategory, categoryTable,
                                                  iteratorSubCatRows, "CategoriesTranslations", "category_id", null);
 
                             iteratorSubCatRows++;
@@ -149,11 +149,20 @@ namespace toolZA
 
             var excel = new ExcelQueryFactory(fileInfO.FullName);
             var worksheetList = excel.GetWorksheetNames().ToList();
-            var excelTable = from c in excel.Worksheet<ExcelTable>(worksheetList[0])
-                                 where c.Name != ""
-                                 orderby c.Name
-                                 select c;
-            return excelTable;
+
+            if (nameFile.Contains("Languages"))
+            {
+                return from c in excel.Worksheet<ExcelTable>(worksheetList[0])
+                       where c.Name != ""
+                       select c;
+            }
+            else
+            {
+                return from c in excel.Worksheet<ExcelTable>(worksheetList[0])
+                       where c.Name != ""
+                       orderby c.Name
+                       select c;
+            }
         }
         public static List<string> GetColumnNames(string nameFile)
         {
@@ -164,7 +173,7 @@ namespace toolZA
 
             return excel.GetColumnNames(worksheetList[0]).ToList();
         }
-        public static void FillWordsTable(List<ExcelTable> subCategoryTable, SqlConnection connection, List<string> columnNames, 
+        public static void FillWordsTable(List<ExcelTable> subCategoryTable, SqlConnection connection, List<string> columnNames,
                                           List<ExcelTable> languagesTable, string[] subCategoryDirDirs, object idSubCategory)
         {
             string picturesDir = new DirectoryInfo(subCategoryDirDirs[0]).FullName;
@@ -208,13 +217,13 @@ namespace toolZA
 
                 var idWord = commandWord.ExecuteScalar();
 
-                FillTranslationTable(languagesTable, connection, columnNames, idWord, subCategoryTable, iteratorWords, 
+                FillTranslationTable(languagesTable, connection, columnNames, idWord, subCategoryTable, iteratorWords,
                                      "WordTranslations", "word_id", pronounceSubDirs);
 
                 iteratorWords++;
             }
         }
-        public static void FillLanguageTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames)
+        public static void FillLanguageTable(List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames)
         {
             int iteratorLangTableColumns = 1;
 
@@ -232,7 +241,7 @@ namespace toolZA
                 }
             }
         }
-        public static void FillTestTable(List<ExcelTable> testNamesTable, SqlConnection connection, List<string> columnNames, 
+        public static void FillTestTable(List<ExcelTable> testNamesTable, SqlConnection connection, List<string> columnNames,
                                          List<ExcelTable> languagesTable, string rootDirName)
         {
             string dirTestIcons = Directory.GetDirectories(rootDirName + "\\Test_Icons")[0];
@@ -241,7 +250,8 @@ namespace toolZA
 
             int iteratorTestIcons = 2;
 
-            foreach (var row in testNamesTable) {
+            foreach (var row in testNamesTable)
+            {
                 SqlCommand commandTest = new SqlCommand();
                 commandTest.Connection = connection;
                 commandTest.Parameters.Add(new SqlParameter("@name", row.Name));
@@ -249,14 +259,14 @@ namespace toolZA
                 commandTest.CommandText = "INSERT INTO Tests (name, icon) VALUES (@name, @icon); SELECT SCOPE_IDENTITY()";
                 var idTest = commandTest.ExecuteScalar();
 
-                FillTranslationTable(languagesTable, connection, columnNames, idTest, testNamesTable, iteratorTestIcons - 2, 
+                FillTranslationTable(languagesTable, connection, columnNames, idTest, testNamesTable, iteratorTestIcons - 2,
                                      "TestTranslations", "test_id", null);
 
                 iteratorTestIcons++;
             }
         }
-        public static void FillTranslationTable (List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames, 
-                                                 object id, List<ExcelTable> transTable, int iteratorTransTable, string table, 
+        public static void FillTranslationTable(List<ExcelTable> languagesTable, SqlConnection connection, List<string> columnNames,
+                                                 object id, List<ExcelTable> transTable, int iteratorTransTable, string table,
                                                  string column, string[] pronounceSubDirs)
         {
             int iteratorLangTableColumns = 1;
@@ -277,7 +287,7 @@ namespace toolZA
                     commandTrans.Connection = connection;
                     commandTrans.Parameters.Add(new SqlParameter("@id", id));
                     commandTrans.Parameters.Add(new SqlParameter("@lang_id", idLanguage));
-                    commandTrans.Parameters.Add(new SqlParameter("@translation", GetTranslation(transTable[iteratorTransTable], 
+                    commandTrans.Parameters.Add(new SqlParameter("@translation", GetTranslation(transTable[iteratorTransTable],
                                                                                                 columnNames[iteratorLangTableColumns])));
 
                     if (table == "WordTranslations")
@@ -304,7 +314,7 @@ namespace toolZA
                 }
             }
         }
-        public static void FillTranslationLanguagesTable (List<ExcelTable> languagesTable, SqlConnection connection, 
+        public static void FillTranslationLanguagesTable(List<ExcelTable> languagesTable, SqlConnection connection,
                                                           List<string> columnNames)
         {
             int iteratorLangTableColumns = 1;
@@ -321,7 +331,7 @@ namespace toolZA
                     var idLanguage = idLanguageQuery.GetValue(0);
                     idLanguageQuery.Close();
 
-                    FillTranslationTable(languagesTable, connection, columnNames, idLanguage, languagesTable, 
+                    FillTranslationTable(languagesTable, connection, columnNames, idLanguage, languagesTable,
                                          iteratorLangTableColumns - 1, "LanguageTranslations", "native_lang_id", null);
 
                     iteratorLangTableColumns++;
